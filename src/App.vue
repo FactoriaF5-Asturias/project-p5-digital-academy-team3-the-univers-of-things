@@ -16,10 +16,9 @@
   <Footer />
 </template>
 
-<style scoped>
+<style>
 /* Para usar Tailwind con @apply aqui. Cambia la dirección en otras carpetas! */
-@reference "./assets/main.css";
-
+/* @reference "./assets/main.css"; */
 
 
 </style>
