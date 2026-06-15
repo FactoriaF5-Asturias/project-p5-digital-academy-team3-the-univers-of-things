@@ -2,6 +2,7 @@
     import { ref, computed, onMounted } from 'vue';
     import ProductCard from './ProductCard.vue';
     import FilterControls from './FilterControls.vue';
+    import SearchField from './SearchField.vue';
     import PaginationControls from './PaginationControls.vue';
     import searchProducts from '@/services/search-products.js';
     import filterProducts from '@/services/filter-products.js';
@@ -28,7 +29,6 @@
     const filteredProducts = computed(() => {
         let result = products.value;
 
-
         if (!result.length) {
             return result;
         };
@@ -50,6 +50,19 @@
 
     // Giving a number of product pages to pagination component
     const pagPagesCount = computed(() => filteredProducts.value.length);
+
+    const filterList = computed(() => {
+        let result = new Set([]);
+
+        products.value.forEach(
+            (item) => item.genres?.map(
+                (genre) => result.add(genre.name)
+            )
+        )
+
+        return [...result];
+    });
+
     
 
 
@@ -57,18 +70,21 @@
 
 <template>
     <section class="section">
-        <h1>Gallery</h1>
+    
+        <!-- FILTERS CONTAINER -->
+        <div class="filters_container"> 
+            <SearchField v-model="searchInput" />
+            <FilterControls v-model="filter" :filterList="filterList"/>
+        </div>
 
-        <!-- FILTER CONTAINER -->
-        <FilterControls />
-
-
+        <h1>Animes</h1>
+        
         <!-- ITEMS GRID -->
         <div class="products_grid">
             <template v-for="(item, key) in filteredProducts[pagCurrentPage]" :key="key">
                 <ProductCard 
                     :id="item.mal_id"
-                    :imgUrl="item.images?.jpg?.image_url"
+                    :imgUrl="item.images?.jpg?.large_image_url"
                     :title="item.title"
                     :description="item.synopsis"
                     :score="item.score"
@@ -80,7 +96,10 @@
         </div>
 
         <!-- PAGINATION -->
-        <PaginationControls />
+        <PaginationControls 
+            v-model="pagCurrentPage" 
+            :totalPages="pagPagesCount" 
+        />
 
     </section>
 </template>
@@ -91,8 +110,16 @@
 
 .section {
     @apply 
-        w-full min-h-screen bg-bg-surface p-4 flex flex-col gap-4 
-        ;
+        w-full min-h-screen bg-bg-surface p-4 flex flex-col gap-8
+    ;
+}
+
+.filters_container {
+    @apply 
+        w-full flex flex-col sm:flex-row gap-4 p-4
+        bg-bg-container rounded-lg shadow-lg
+        border border-border-default
+    ;
 }
 
 .products_grid {
@@ -101,5 +128,7 @@
         gap-8
         ;
 }
+
+
 
 </style>
