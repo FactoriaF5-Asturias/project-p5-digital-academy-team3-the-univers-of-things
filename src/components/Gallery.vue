@@ -136,7 +136,8 @@
 .products_grid {
     @apply 
         grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 
-        gap-8
+        gap-8 
+        justify-items-center md:justify-items-normal
         ;
 }
 
