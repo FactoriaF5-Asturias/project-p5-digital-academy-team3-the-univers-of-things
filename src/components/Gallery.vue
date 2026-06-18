@@ -14,7 +14,7 @@
     const filter = ref("");
     const searchInput = ref("");
 
-    const itemsPerPage = ref(8);
+    const itemsPerPage = ref(16);
     const pagCurrentPage = ref(0);
 
     const productsStore = useProductsStore();
