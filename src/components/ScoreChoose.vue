@@ -13,32 +13,44 @@ const availableRates = ref([
 ])
 
 const chosen = ref(null)
-const disabled = ref(false)
+// const disabled = ref(false)
+const hovered = ref(null)
+const bouncing = ref(null)
 
 const { addScore } = useScoreStore();
 
 async function buttonHandler(score) {
-    if (disabled.value) return;
+    bouncing.value = score;
+    if (chosen.value === score) {
+        chosen.value = null;
+        hovered.value = null;
+        await addScore(props.id, null);
+        return;
+    }
     await addScore(props.id, score);
     chosen.value = score;
-    disabled.value = true;
 }
 
 </script>
 
 <template>
-    <div class="stars_container">
+    <div
+        class="stars_container"
+        @mouseleave="hovered = null"
+    >
         <div 
             v-for="n in availableRates" 
             :key="n" 
             @click="buttonHandler(n)"
-            class="star"
-            :class="!disabled ? 'available' : ''"
+            @mouseenter="hovered = n"
+            class="star available"
         >
             <Star 
                 size="18"
                 stroke-width="2"
-                :fill="chosen == n ? 'currentColor' : 'none'"
+                :fill="n <= (hovered !== null ? hovered : (chosen ?? 0)) ? 'currentColor' : 'none'"
+                :class="n === bouncing ? 'pop' : ''"
+                @animationend="bouncing = null"
             /> 
         </div>
     </div> 
@@ -64,6 +76,22 @@ async function buttonHandler(score) {
     @apply
         hover:text-text-default hover:scale-125
     ;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pop {
+    animation: pop 0.3s ease;
 }
 
 </style>
