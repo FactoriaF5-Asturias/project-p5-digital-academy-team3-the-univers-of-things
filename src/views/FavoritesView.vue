@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/firebase'
 import { useFavoritesStore } from '@/stores/favorites-store'
 import { useAuthStore } from '@/stores/auth-store'
 import { storeToRefs } from 'pinia'
@@ -15,6 +17,7 @@ const { favorites } = storeToRefs(favoritesStore)
 const animeList = ref([])
 const loading = ref(false)
 const error = ref(null)
+const animesViewed = ref(0)
 
 onMounted(async () => {
     loading.value = true
@@ -30,6 +33,11 @@ onMounted(async () => {
 
         // Filter out any nulls (failed requests)
         animeList.value = results.filter(anime => anime !== null)
+
+        if (authStore.user?.uid) {
+            const docSnap = await getDoc(doc(db, "users", authStore.user.uid))
+            animesViewed.value = docSnap.data()?.animesViewed ?? 0
+        }
 
     } catch (err) {
         error.value = err.message
@@ -47,21 +55,21 @@ const goToDetail = (animeId) => {
     <section>
         <div class="profile-container">
             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=nexus" alt="Profile_Image" class="profile-icon">
-            <p class="profile-name">{{ authStore.user.fullName }}</p>
+            <p class="profile-name">{{ authStore.user?.fullName }}</p>
         </div>
         <div class="sub-profile-container">
             <p class="sub-profile-status">
 
             </p>
         </div>
-         <div class="profile-stats">
+        <div class="profile-stats">
             <div class="stats-container">
                 <h2>FAVORITE ANIMES</h2>
-                <p>200</p> <!-- Placeholder number -->
+                <p>{{ favorites.length }}</p> <!-- Real count number -->
             </div>
             <div class="stats-container">
                 <h2>ANIMES VIEWED</h2>
-                <p>400</p> <!-- Placeholder number -->
+                <p>{{ animesViewed }}</p> <!-- Real count number -->
             </div>
         </div>
     </section>
@@ -79,10 +87,18 @@ const goToDetail = (animeId) => {
         </div>
 
         <div v-else class="favorites-grid">
-            <ProductCard v-for="anime in animeList" :key="anime.mal_id" :id="anime.mal_id"
-                :imgUrl="anime.images?.jpg?.large_image_url" :title="anime.title" :score="anime.score"
-                :category="anime.type" :genres="anime.genres?.map(g => g.name)" :episodes="anime.episodes"
-                @click="goToDetail(anime.mal_id)" />
+            <ProductCard
+            v-for="anime in animeList"
+            :key="anime.mal_id"
+            :id="anime.mal_id"
+            :imgUrl="anime.images?.jpg?.large_image_url"
+            :title="anime.title"
+            :score="anime.score"
+            :scoredBy="anime.score_by"
+            :category="anime.type"
+            :genres="anime.genres?.map(g => g.name)"
+            :episodes="anime.episodes"
+            @click="goToDetail(anime.mal_id)" />
         </div>
     </div>
 </template>
@@ -91,49 +107,34 @@ const goToDetail = (animeId) => {
 @reference "../assets/main.css";
 
 .profile-container {
-    @apply
-        flex ml-[120.5px] mt-10
-        items-center
-        gap-6
+    @apply flex ml-[120.5px] mt-10 items-center gap-6
 }
 
 .profile-container img {
-    @apply
-        w-15 h-15 rounded-full
-        border border-border-brand
-        overflow-hidden
+    @apply w-15 h-15 rounded-full border border-border-brand overflow-hidden
 }
 
 .profile-container p {
     font-family: 'Sora';
-    @apply
-        font-bold text-[32px]
+    @apply font-bold text-[32px]
 }
 
 .profile-stats {
-    @apply
-        flex gap-5
-        mt-10 ml-[120.5px]
+    @apply flex gap-5 mt-10 ml-[120.5px]
 }
 
 .stats-container {
-    @apply
-        bg-bg-container pt-6 pl-6 pb-3
-        border border-border-default rounded-lg
-        w-60
+    @apply bg-bg-container pt-6 pl-6 pb-3 border border-border-default rounded-lg w-60
 }
 
 .stats-container h2 {
     font-family: 'JetBrains Mono';
-    @apply
-        text-[14px] font-normal
-        mb-2
+    @apply text-[14px] font-normal mb-2
 }
 
 .stats-container p {
     font-family: 'Sora';
-    @apply
-        font-extrabold text-[48px]
+    @apply font-extrabold text-[48px]
 }
 
 .favorites-container {
@@ -141,6 +142,15 @@ const goToDetail = (animeId) => {
 }
 
 .favorites-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6;
+    @apply
+        grid grid-cols-1
+        sm:grid-cols-2
+        lg:grid-cols-4 gap-6
+        cursor-pointer;
+}
+
+.favorites-grid :deep(.container){
+    @apply
+        hover:scale-105
 }
 </style>
