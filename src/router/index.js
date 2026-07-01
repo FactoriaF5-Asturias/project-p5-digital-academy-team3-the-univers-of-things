@@ -83,7 +83,7 @@ router.beforeEach(async (to, from) => {
 
   // Si venimos del login hacia home, forzar recarga completa de la página
   if (to.name === 'home' && from.name === 'login') {
-    window.location.href = to.fullPath
+    window.location.href = import.meta.env.BASE_URL
     return false
   }
 })
